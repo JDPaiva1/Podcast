@@ -1,22 +1,48 @@
-import { Link } from '../routes'
-import Head from 'next/head'
-import NProgress from 'nprogress'
-import Router from 'next/router'
-Router.onRouteChangeStart = (url) => {
-  NProgress.start()
+import React, { useEffect } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import NProgress from 'nprogress';
+import { useRouter } from 'next/router';
+import { LayoutProps } from '../types';
+
+// Configure NProgress
+if (typeof window !== 'undefined') {
+  NProgress.configure({ showSpinner: false });
 }
-Router.onRouteChangeComplete = () => NProgress.done()
-Router.onRouteChangeError = () => NProgress.done()
-export default class Layout extends React.Component {
-  render() {
-    const { children, title } = this.props
-    return <div>
+
+export default function Layout({ children, title }: LayoutProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleStart = () => {
+      NProgress.start();
+    };
+
+    const handleComplete = () => {
+      NProgress.done();
+    };
+
+    router.events.on('routeChangeStart', handleStart);
+    router.events.on('routeChangeComplete', handleComplete);
+    router.events.on('routeChangeError', handleComplete);
+
+    return () => {
+      router.events.off('routeChangeStart', handleStart);
+      router.events.off('routeChangeComplete', handleComplete);
+      router.events.off('routeChangeError', handleComplete);
+    };
+  }, [router]);
+
+  return (
+    <div>
       <Head>
-        <title>{ title }</title>
-        <meta name="viewport" content="width=device-width"/>
+        <title>{title}</title>
+        <meta name="viewport" content="width=device-width" />
       </Head>
-      <header><Link route="home"><a>Podcasts</a></Link></header>
-      { children }
+      <header>
+        <Link href="/">Podcasts</Link>
+      </header>
+      {children}
       <style jsx>{`
         header {
           color: #fff;
@@ -24,7 +50,7 @@ export default class Layout extends React.Component {
           padding: 15px;
           text-align: center;
         }
-        header a {
+        header a, header :global(a) {
           color: #fff;
           text-decoration: none;
         }
@@ -98,5 +124,5 @@ export default class Layout extends React.Component {
         }
       `}</style>
     </div>
-  }
-}
+  );
+} 

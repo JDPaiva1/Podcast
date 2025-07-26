@@ -1,33 +1,35 @@
-import 'isomorphic-fetch'
-import Link from 'next/link'
-export default class extends React.Component {
-  static async getInitialProps ({ query }) {
-    let id = query.id
-    let fetchClip = await fetch(`https://api.audioboom.com/audio_clips/${id}.mp3`)
-    let clip = (await fetchClip.json()).body.audio_clip
-    return { clip }
-  }
-  render() {
-    const { clip } = this.props
-    return <div>
-      <header>Podcasts</header>
-      <div className='modal'>
-        <div className='clip'>
-          <nav>
-            <Link href={`/channel?id=${clip.channel.id}`}>
+import React from 'react';
+import Link from 'next/link';
+import slug from '../helpers/slug';
+import { Podcast } from '../types';
+
+interface PodcastPlayerProps {
+  clip: Podcast;
+  onClose?: () => void;
+}
+
+export default function PodcastPlayer({ clip, onClose }: PodcastPlayerProps) {
+  return (
+    <div className="modal">
+      <div className='clip'>
+        <nav>
+          {onClose ? (
+            <a onClick={onClose}>&lt; Volver</a>
+          ) : (
+            <Link legacyBehavior href={`/${slug(clip.channel.title)}.${clip.channel.id}`}>
               <a className='close'>&lt; Volver</a>
             </Link>
-          </nav>
-          <picture>
-            <div style={{ backgroundImage: `url(${clip.urls.image || clip.channel.urls.logo_image.original})` }} />
-          </picture>
-          <div className='player'>
-            <h3>{ clip.title }</h3>
-            <h6>{ clip.channel.title }</h6>
-            <audio controls autoPlay={true}>
-              <source src={clip.urls.high_mp3} type='audio/mpeg' />
-            </audio>
-          </div>
+          )}
+        </nav>
+        <picture>
+          <div style={{ backgroundImage: `url(${clip.urls.image || clip.channel.urls.logo_image.original})` }} />
+        </picture>
+        <div className='player'>
+          <h3>{clip.title}</h3>
+          <h6>{clip.channel.title}</h6>
+          <audio controls autoPlay={true}>
+            <source src={clip.urls.high_mp3} type='audio/mpeg' />
+          </audio>
         </div>
       </div>
       <style jsx>{`
@@ -89,13 +91,6 @@ export default class extends React.Component {
           z-index: 99999;
         }
       `}</style>
-      <style jsx global>{`
-        body {
-          margin: 0;
-          font-family: system-ui;
-          background: white;
-        }
-      `}</style>
     </div>
-  }
-}
+  );
+} 
